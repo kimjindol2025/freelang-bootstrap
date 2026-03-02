@@ -99,6 +99,15 @@ export class BorrowChecker {
         break;
       }
 
+      case 'arrayAssignment': {
+        const n = node as any;
+        // 배열 할당: arr[index] = value
+        this.analyzeExpressionForBorrow(n.array);
+        this.analyzeExpressionForBorrow(n.index);
+        this.analyzeExpressionForBorrow(n.value);
+        break;
+      }
+
       case 'block': {
         const n = node as any;
         this.currentScope++;

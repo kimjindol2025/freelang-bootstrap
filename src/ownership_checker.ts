@@ -131,6 +131,16 @@ export class OwnershipChecker {
         break;
       }
 
+      case 'arrayAssignment': {
+        const n = node as any;
+        // 배열 할당: arr[index] = value
+        this.analyzeExpression(n.array);
+        this.analyzeExpression(n.index);
+        this.analyzeExpression(n.value);
+        this.lineCounter++;
+        break;
+      }
+
       case 'block': {
         const n = node as any;
         this.enterScope();

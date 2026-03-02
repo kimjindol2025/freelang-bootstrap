@@ -161,43 +161,41 @@ describe('Ownership Rules', () => {
   describe('Rule 3: Function Ownership', () => {
     test('function parameter ownership transfer', () => {
       const code = `
-        fn take(x) {
+        fn take(x: int) {
           print(x)
         }
         a = 42
         take(a)
       `;
       const { ownershipErrors } = checkCode(code);
-      // 함수 호출이 매개변수 분석까지 지원하면 에러 발생
-      // 현재는 기본 소유권 추적만 지원하므로 에러 없을 수 있음
+      // 타입 주석 지원으로 이제 파싱 가능
       expect(ownershipErrors.length).toBeGreaterThanOrEqual(0);
     });
 
     test('function return ownership', () => {
       const code = `
-        fn get_value() {
+        fn get_value() -> int {
           x = 100
           return x
         }
         y = get_value()
       `;
       const { ownershipErrors } = checkCode(code);
-      // 함수 반환값 소유권 이전은 현재 기본 구현
+      // 반환 타입 주석 지원으로 이제 파싱 가능
       expect(ownershipErrors).toHaveLength(0);
     });
 
     test('reference parameter no transfer', () => {
       const code = `
-        fn borrow(x) {
+        fn borrow(x: &int) {
           print(x)
         }
         a = 42
-        borrow(a)
+        borrow(&a)
         print(a)
       `;
       const { ownershipErrors } = checkCode(code);
-      // 함수 호출 후 원본 사용 - 함수 소유권 이동
-      // 현재는 이동으로 처리되지 않음 (향후 고도화)
+      // &int 타입 주석 지원으로 이제 파싱 가능
       expect(ownershipErrors.length).toBeGreaterThanOrEqual(0);
     });
   });
@@ -245,33 +243,34 @@ describe('Borrow Rules', () => {
     test('single mutable borrow allowed', () => {
       const code = `
         x = 100
-        m = &x
+        m = &mut x
       `;
       const { borrowErrors } = checkCode(code);
-      // 공유 참조는 허용
+      // &mut이 이제 하나의 연산자로 처리됨
       expect(borrowErrors.filter(e => e.type === 'multiple_mutable')).toHaveLength(0);
     });
 
     test('multiple mutable borrows not allowed', () => {
       const code = `
         x = [1, 2, 3]
-        m1 = &x
-        m2 = &x
-        m3 = &x
+        m1 = &mut x
+        m2 = &mut x
       `;
       const { borrowErrors } = checkCode(code);
-      // 공유 참조는 여러 개 가능하므로 에러 없음
-      expect(borrowErrors.filter(e => e.type === 'multiple_mutable')).toHaveLength(0);
+      // 여러 개의 mutable borrow는 금지
+      expect(borrowErrors).toContainEqual(
+        expect.objectContaining({ type: 'multiple_mutable', variable: 'x' })
+      );
     });
 
     test('exclusive mutable access', () => {
       const code = `
         x = 100
-        m = &x
+        m = &mut x
         print(x)
       `;
       const { borrowErrors } = checkCode(code);
-      // 공유 참조로 접근하므로 에러 없음
+      // mutable borrow 중 원본 접근 시도
       expect(borrowErrors.length).toBeGreaterThanOrEqual(0);
     });
   });
@@ -280,24 +279,27 @@ describe('Borrow Rules', () => {
     test('shared and mutable cannot coexist', () => {
       const code = `
         x = 100
-        s1 = &x
-        s2 = &x
-        s3 = &x
+        s = &x
+        m = &mut x
       `;
       const { borrowErrors } = checkCode(code);
-      // 공유 참조는 여러 개 가능
-      expect(borrowErrors.filter(e => e.type === 'shared_mutable_conflict')).toHaveLength(0);
+      // 공유 참조와 변경 가능 참조는 동시 존재 불가
+      expect(borrowErrors).toContainEqual(
+        expect.objectContaining({ type: 'shared_mutable_conflict', variable: 'x' })
+      );
     });
 
     test('mutable then shared conflict', () => {
       const code = `
         x = 100
-        r = &x
-        y = x
+        m = &mut x
+        s = &x
       `;
-      const { borrowErrors, ownershipErrors } = checkCode(code);
-      // 참조 후 이동은 현재 미감지 (향후 고도화)
-      expect(borrowErrors.length + ownershipErrors.length).toBeGreaterThanOrEqual(0);
+      const { borrowErrors } = checkCode(code);
+      // 변경 가능 참조 후 공유 참조도 충돌
+      expect(borrowErrors).toContainEqual(
+        expect.objectContaining({ type: 'shared_mutable_conflict', variable: 'x' })
+      );
     });
   });
 });
@@ -342,23 +344,27 @@ describe('Error Cases (감지 테스트)', () => {
   test('detect: multiple mutable borrows', () => {
     const code = `
       x = [1, 2, 3]
-      r1 = &x
-      r2 = &x
+      m1 = &mut x
+      m2 = &mut x
     `;
     const { borrowErrors } = checkCode(code);
-    // 공유 참조는 여러 개 가능
-    expect(borrowErrors.filter(e => e.type === 'multiple_mutable')).toHaveLength(0);
+    // 여러 개의 mutable borrow는 금지
+    expect(borrowErrors).toContainEqual(
+      expect.objectContaining({ type: 'multiple_mutable', variable: 'x' })
+    );
   });
 
   test('detect: shared and mutable conflict', () => {
     const code = `
       x = 100
-      y = x
-      z = x
+      s = &x
+      m = &mut x
     `;
-    const { borrowErrors, ownershipErrors } = checkCode(code);
-    // 첫 번째 이동 후 두 번째 이동은 에러
-    expect(ownershipErrors.length).toBeGreaterThan(0);
+    const { borrowErrors } = checkCode(code);
+    // Shared + Mutable 충돌
+    expect(borrowErrors).toContainEqual(
+      expect.objectContaining({ type: 'shared_mutable_conflict', variable: 'x' })
+    );
   });
 
   test('detect: use after free', () => {
@@ -380,15 +386,15 @@ describe('Error Cases (감지 테스트)', () => {
 describe('Complex Scenarios', () => {
   test('scenario 1: function with reference parameters', () => {
     const code = `
-      fn modify(arr) {
-        print(arr)
+      fn modify(arr: &mut [int]) {
+        arr[0] = 42
       }
       a = [1, 2, 3]
-      modify(a)
+      modify(&mut a)
       print(a)
     `;
     const { ownershipErrors, borrowErrors } = checkCode(code);
-    // 함수 호출 후 사용 - 함수 매개변수는 현재 이동으로 처리됨
+    // 배열 할당이 이제 지원됨
     expect(ownershipErrors.length + borrowErrors.length).toBeGreaterThanOrEqual(0);
   });
 

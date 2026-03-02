@@ -80,10 +80,50 @@ export class Parser {
     const params: string[] = [];
     if (!this.check('rparen')) {
       do {
-        params.push(this.consume('identifier', 'Expected parameter name').value as string);
+        const paramName = this.consume('identifier', 'Expected parameter name').value as string;
+        params.push(paramName);
+
+        // 타입 주석이 있으면 건너뛰기: x: int 또는 x: &T
+        if (this.match('colon')) {
+          // 타입 이름 읽기
+          if (!this.check('rparen') && !this.check('comma')) {
+            // &, &mut 처리
+            if (this.match('operator', '&')) {
+              if (this.match('keyword', 'mut')) {
+                // &mut T
+              }
+            }
+            // 타입 이름
+            if (this.check('identifier') || this.check('lbracket')) {
+              this.advance();
+              // [T] 형태 처리
+              if (this.previous().type === 'lbracket') {
+                this.advance(); // T
+                this.consume('rbracket', 'Expected ] in type');
+              }
+            }
+          }
+        }
       } while (this.match('comma'));
     }
     this.consume('rparen', 'Expected ) after parameters');
+
+    // 반환 타입 주석이 있으면 건너뛰기: -> Type
+    if (this.match('arrow')) {
+      // 반환 타입 읽기 (생략)
+      if (this.check('identifier')) {
+        this.advance();
+      } else if (this.check('lbracket')) {
+        // [Type] 형태
+        this.advance(); // [
+        if (this.check('identifier')) {
+          this.advance();
+        }
+        if (this.check('rbracket')) {
+          this.advance();
+        }
+      }
+    }
 
     const body = this.statement();
 
@@ -147,6 +187,15 @@ export class Parser {
         return {
           type: 'assignment',
           variable: (expr as any).name,
+          value
+        };
+      } else if (expr.type === 'arrayAccess') {
+        // 배열 할당: arr[0] = 42
+        const value = this.assignment();
+        return {
+          type: 'arrayAssignment',
+          array: (expr as any).array,
+          index: (expr as any).index,
           value
         };
       }
@@ -229,10 +278,17 @@ export class Parser {
   }
 
   private unary(): ASTNode {
-    if (this.match('operator', '-', '!')) {
+    if (this.match('operator', '-', '!', '&')) {
       const operator = this.previous().value as string;
+
+      // &mut 처리
+      let finalOperator = operator;
+      if (operator === '&' && this.match('keyword', 'mut')) {
+        finalOperator = '&mut';
+      }
+
       const operand = this.unary();
-      return { type: 'unaryOp', operator, operand };
+      return { type: 'unaryOp', operator: finalOperator, operand };
     }
 
     return this.call();

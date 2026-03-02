@@ -31,6 +31,7 @@ export type ASTNode =
   | WhileLoop
   | ForLoop
   | Assignment
+  | ArrayAssignment
   | Block
   | ReturnStatement
   | ArrayLiteral
@@ -103,6 +104,13 @@ export interface ForLoop {
 export interface Assignment {
   type: 'assignment';
   variable: string;
+  value: ASTNode;
+}
+
+export interface ArrayAssignment {
+  type: 'arrayAssignment';
+  array: ASTNode;
+  index: ASTNode;
   value: ASTNode;
 }
 
