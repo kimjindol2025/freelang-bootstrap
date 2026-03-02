@@ -25,23 +25,28 @@ class Parser {
     }
     statement() {
         // 함수 정의
-        if (this.match('keyword', 'fn')) {
+        if (this.checkKeyword('fn')) {
+            this.advance();
             return this.functionDefinition();
         }
         // if 문
-        if (this.match('keyword', 'if')) {
+        if (this.checkKeyword('if')) {
+            this.advance();
             return this.ifStatement();
         }
         // while 루프
-        if (this.match('keyword', 'while')) {
+        if (this.checkKeyword('while')) {
+            this.advance();
             return this.whileLoop();
         }
         // for 루프
-        if (this.match('keyword', 'for')) {
+        if (this.checkKeyword('for')) {
+            this.advance();
             return this.forLoop();
         }
         // return 문
-        if (this.match('keyword', 'return')) {
+        if (this.checkKeyword('return')) {
+            this.advance();
             const value = this.expression();
             this.skipSemicolon();
             return { type: 'return', value };
@@ -202,6 +207,12 @@ class Parser {
                     throw new Error('Can only call functions');
                 }
             }
+            else if (this.match('lbracket')) {
+                // 배열 인덱싱
+                const index = this.expression();
+                this.consume('rbracket', 'Expected ] after array index');
+                expr = { type: 'arrayAccess', array: expr, index };
+            }
             else {
                 break;
             }
@@ -223,6 +234,17 @@ class Parser {
         }
         if (this.match('keyword', 'false')) {
             return { type: 'number', value: 0 }; // false = 0
+        }
+        // 배열 리터럴
+        if (this.match('lbracket')) {
+            const elements = [];
+            if (!this.check('rbracket')) {
+                do {
+                    elements.push(this.expression());
+                } while (this.match('comma'));
+            }
+            this.consume('rbracket', 'Expected ] after array elements');
+            return { type: 'arrayLiteral', elements };
         }
         // 식별자
         if (this.match('identifier')) {
@@ -262,6 +284,12 @@ class Parser {
         if (value && token.value !== value)
             return false;
         return true;
+    }
+    checkKeyword(keyword) {
+        if (this.isAtEnd())
+            return false;
+        const token = this.peek();
+        return token.type === 'keyword' && token.value === keyword;
     }
     advance() {
         if (!this.isAtEnd())

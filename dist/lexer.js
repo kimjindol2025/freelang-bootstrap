@@ -52,6 +52,14 @@ class Lexer {
                 this.addToken('rbrace', '}');
                 this.advance();
             }
+            else if (char === '[') {
+                this.addToken('lbracket', '[');
+                this.advance();
+            }
+            else if (char === ']') {
+                this.addToken('rbracket', ']');
+                this.advance();
+            }
             // 구분자
             else if (char === ',') {
                 this.addToken('comma', ',');

@@ -67,6 +67,12 @@ export class Evaluator {
       case 'functionDef':
         return this.evalFunctionDef(node as any, env);
 
+      case 'arrayLiteral':
+        return this.evalArrayLiteral(node as any, env);
+
+      case 'arrayAccess':
+        return this.evalArrayAccess(node as any, env);
+
       default:
         throw new Error(`Unknown node type: ${(node as any).type}`);
     }
@@ -230,6 +236,25 @@ export class Evaluator {
   private evalFunctionDef(node: any, env: Environment): FlValue {
     env.functions.set(node.name, node as FunctionDef);
     return null;
+  }
+
+  private evalArrayLiteral(node: any, env: Environment): FlValue {
+    return node.elements.map((elem: ASTNode) => this.eval(elem, env));
+  }
+
+  private evalArrayAccess(node: any, env: Environment): FlValue {
+    const array = this.eval(node.array, env);
+    const index = this.eval(node.index, env) as number;
+
+    if (!Array.isArray(array)) {
+      throw new Error('Cannot access index of non-array');
+    }
+
+    if (index < 0 || index >= array.length) {
+      return null;
+    }
+
+    return array[index] ?? null;
   }
 
   private isBuiltinFunction(name: string): boolean {

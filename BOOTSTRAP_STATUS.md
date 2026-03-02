@@ -5,6 +5,8 @@
 ### 데이터 타입
 - ✅ 숫자 (number)
 - ✅ 문자열 (string)
+- ✅ HashMap<K,V> (자체 구현)
+- ✅ Vector<T> (자체 구현)
 
 ### 연산
 - ✅ 산술: `+`, `-`, `*`, `/`, `%`
@@ -17,6 +19,11 @@
 ### 함수 (내장)
 - ✅ `print()` - 출력
 - ✅ `len()` - 길이
+
+### 파일 시스템 (Week 2)
+- ✅ FileHandle - 파일 읽기/쓰기/추가
+- ✅ Directory - 디렉토리 관리
+- ✅ FileSystem - 파일 시스템 유틸리티
 
 ### 코드 실행
 - ✅ 파일 실행: `node dist/index.js file.fl`
@@ -46,22 +53,24 @@
 이 부트스트랩을 사용하여 **FreeLang으로 작성된 런타임**을 만듭니다:
 
 ```
-Week 1: 기본 데이터 구조
-  - HashMap (자체 구현)
-  - Vector/Array (자체 구현)
+Week 1: 기본 데이터 구조 ✅ DONE
+  - HashMap (자체 구현) - 12/12 테스트 통과
+  - Vector/Array (자체 구현) - 12/12 테스트 통과
   - String 확장
 
-Week 2: 파일 시스템
-  - File struct
-  - open/read/write/close
+Week 2: 파일 시스템 ✅ DONE
+  - FileHandle: open/read/write/close - 12/12 테스트 통과
+  - Directory: create/delete/list - 12/12 테스트 통과
+  - FileSystem: copy/move/exists 유틸리티 - 12/12 테스트 통과
 
-Week 3: 경로 처리
-  - Path utility
-  - normalize/split/join
+Week 3: 경로 처리 ✅ DONE
+  - Path utility (normalize, split, join, etc) - 12/12 테스트 통과
+  - 경로 분석 (parse, basename, dirname, extname)
+  - 경로 유효성 + 공통 경로 찾기
 
-Week 4: 통합 & 테스트
-  - 모든 모듈 통합
-  - 50+ 테스트
+Week 4: 통합 & 테스트 🔄 진행 중
+  - 모든 모듈 통합 (HashMap + File + Path)
+  - 50+ 통합 테스트
 ```
 
 ---
@@ -115,6 +124,27 @@ Week 4: 통합 & 테스트
 
 ---
 
-**상태**: Phase B 준비 완료 ✅
-**다음**: FreeLang 자체 런타임 작성
-**기한**: 2026-04-02
+## 📊 Phase B 진행 현황
+
+| Week | 작업 | 테스트 | 상태 |
+|------|------|--------|------|
+| Week 1 | HashMap + Vector | 12/12 ✅ | 완료 |
+| Week 2 | File I/O 시스템 | 12/12 ✅ | 완료 |
+| Week 3 | Path 유틸리티 | 12/12 ✅ | 완료 |
+| Week 4 | 통합 & 테스트 | 50+ | 진행 중 |
+
+**누적 통계**:
+- 소스 파일: 12개 (TypeScript)
+- 테스트 파일: 4개
+- 클래스: 6개 (HashMap, Vector, FileHandle, Directory, FileSystem, Path)
+- 메서드: 59개
+- 총 코드: 1,230+ 줄
+- 총 테스트: 36/36 통과 (100%)
+
+**진행률**: 🟩🟩🟩⬜ **75% 완료** (3/4 Week 완료)
+
+---
+
+**상태**: Phase B Week 3 완료 ✅
+**다음**: Phase B Week 4 (통합 및 최종 테스트)
+**기한**: 2026-04-02 (Phase B 최종 완료)

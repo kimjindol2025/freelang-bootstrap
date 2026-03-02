@@ -50,6 +50,10 @@ class Evaluator {
                 throw { type: 'return', value: this.eval(node.value, env) };
             case 'functionDef':
                 return this.evalFunctionDef(node, env);
+            case 'arrayLiteral':
+                return this.evalArrayLiteral(node, env);
+            case 'arrayAccess':
+                return this.evalArrayAccess(node, env);
             default:
                 throw new Error(`Unknown node type: ${node.type}`);
         }
@@ -176,6 +180,20 @@ class Evaluator {
     evalFunctionDef(node, env) {
         env.functions.set(node.name, node);
         return null;
+    }
+    evalArrayLiteral(node, env) {
+        return node.elements.map((elem) => this.eval(elem, env));
+    }
+    evalArrayAccess(node, env) {
+        const array = this.eval(node.array, env);
+        const index = this.eval(node.index, env);
+        if (!Array.isArray(array)) {
+            throw new Error('Cannot access index of non-array');
+        }
+        if (index < 0 || index >= array.length) {
+            return null;
+        }
+        return array[index] ?? null;
     }
     isBuiltinFunction(name) {
         const builtins = [

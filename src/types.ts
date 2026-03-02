@@ -7,6 +7,7 @@
 export type TokenType =
   | 'number' | 'string' | 'identifier' | 'keyword'
   | 'operator' | 'lparen' | 'rparen' | 'lbrace' | 'rbrace'
+  | 'lbracket' | 'rbracket'
   | 'comma' | 'semicolon' | 'eof' | 'newline' | 'colon'
   | 'equals' | 'arrow' | 'dot';
 
@@ -31,7 +32,11 @@ export type ASTNode =
   | ForLoop
   | Assignment
   | Block
-  | ReturnStatement;
+  | ReturnStatement
+  | ArrayLiteral
+  | ArrayAccess
+  | ObjectLiteral
+  | ObjectAccess;
 
 export interface NumberLiteral {
   type: 'number';
@@ -109,6 +114,28 @@ export interface Block {
 export interface ReturnStatement {
   type: 'return';
   value: ASTNode;
+}
+
+export interface ArrayLiteral {
+  type: 'arrayLiteral';
+  elements: ASTNode[];
+}
+
+export interface ArrayAccess {
+  type: 'arrayAccess';
+  array: ASTNode;
+  index: ASTNode;
+}
+
+export interface ObjectLiteral {
+  type: 'objectLiteral';
+  properties: Array<{ key: string; value: ASTNode }>;
+}
+
+export interface ObjectAccess {
+  type: 'objectAccess';
+  object: ASTNode;
+  property: string;
 }
 
 // 값 타입
