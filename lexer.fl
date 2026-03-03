@@ -10,7 +10,7 @@
 # ================================================================
 
 # 렉서 상태 구조
-fn createLexerState(source: string) {
+fn createLexerState(source: string): string {
   return {
     "source": source,
     "position": 0,
@@ -21,7 +21,7 @@ fn createLexerState(source: string) {
 }
 
 # Token 구조 정의
-fn createToken(tokenType: string, value: string, line: int, column: int) {
+fn createToken(tokenType: string, value: string, line: i32, column: i32): string {
   return {
     "type": tokenType,
     "value": value,
@@ -31,32 +31,32 @@ fn createToken(tokenType: string, value: string, line: int, column: int) {
 }
 
 # 문자 분류 함수
-fn isDigit(c: string) {
+fn isDigit(c: string): bool {
   return c >= "0" and c <= "9"
 }
 
-fn isAlpha(c: string) {
+fn isAlpha(c: string): bool {
   return (c >= "a" and c <= "z") or
          (c >= "A" and c <= "Z") or
          c == "_"
 }
 
-fn isAlphaNumeric(c: string) {
+fn isAlphaNumeric(c: string): bool {
   return isAlpha(c) or isDigit(c)
 }
 
-fn isOperator(c: string) {
+fn isOperator(c: string): bool {
   return c == "+" or c == "-" or c == "*" or c == "/" or
          c == "%" or c == "=" or c == "<" or c == ">" or
          c == "!" or c == "&" or c == "|"
 }
 
-fn isWhitespace(c: string) {
+fn isWhitespace(c: string): bool {
   return c == " " or c == "\t" or c == "\r"
 }
 
 # 렉서 메인 함수 (상태 기반)
-fn tokenize(source: string) {
+fn tokenize(source: string): string {
   state = createLexerState(source)
 
   # 메인 루프
@@ -159,7 +159,7 @@ fn tokenize(source: string) {
 }
 
 # 공백과 주석 건너뛰기
-fn skipWhitespaceAndComments(state: {}) {
+fn skipWhitespaceAndComments(state: string): string {
   while state["position"] < len(state["source"]) {
     c = state["source"][state["position"]]
 
@@ -183,7 +183,7 @@ fn skipWhitespaceAndComments(state: {}) {
 }
 
 # 숫자 읽기
-fn readNumber(state: {}) {
+fn readNumber(state: string): string {
   startCol = state["column"]
   value = ""
 
@@ -205,7 +205,7 @@ fn readNumber(state: {}) {
 }
 
 # 문자열 읽기
-fn readString(state: {}, quote: string) {
+fn readString(state: string, quote: string): string {
   startCol = state["column"]
   state["position"] = state["position"] + 1  # 시작 따옴표 건너뛰기
   state["column"] = state["column"] + 1
@@ -273,7 +273,7 @@ fn readString(state: {}, quote: string) {
 }
 
 # 식별자 또는 키워드 읽기
-fn readIdentifierOrKeyword(state: {}) {
+fn readIdentifierOrKeyword(state: string): string {
   startCol = state["column"]
   value = ""
 
@@ -304,7 +304,7 @@ fn readIdentifierOrKeyword(state: {}) {
 }
 
 # 연산자 읽기
-fn readOperator(state: {}) {
+fn readOperator(state: string): string {
   startCol = state["column"]
   value = state["source"][state["position"]]
   state["position"] = state["position"] + 1
@@ -343,7 +343,7 @@ fn readOperator(state: {}) {
 }
 
 # 토큰 추가 헬퍼
-fn addTokenState(state: {}, tokenType: string, value: string) {
+fn addTokenState(state: string, tokenType: string, value: string): string {
   token = createToken(tokenType, value, state["line"], state["column"])
   state["tokens"] = state["tokens"] + [token]
   return state
@@ -354,7 +354,7 @@ fn addTokenState(state: {}, tokenType: string, value: string) {
 # ================================================================
 
 # 간단한 렉서 테스트
-fn testLexer() {
+fn testLexer(): string {
   # 테스트 코드
   testCases = [
     "x = 42",
